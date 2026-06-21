@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRTS TERMINAL - 權限解鎖</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PRTS TERMINAL</title>
     <style>
         body {
             margin: 0;
@@ -18,13 +18,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            -webkit-text-size-adjust: 100%; 
         }
 
         /* 綠色調的動態背景網格 */
         #bgLayer {
             position: absolute;
-            top: -5%; left: -5%; 
-            width: 110%; height: 110%;
+            top: -10%; left: -10%; 
+            width: 120%; height: 120%;
             background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
             background-size: 40px 40px;
@@ -37,91 +38,100 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 800px; height: 800px;
+            width: 100vw; height: 100vw;
+            max-width: 800px; max-height: 800px;
             background: radial-gradient(circle, rgba(0, 255, 65, 0.05) 0%, transparent 60%);
             pointer-events: none;
         }
 
-        /* UI 互動區 */
+        /* UI 互動主層 */
         #uiLayer {
             position: relative;
             z-index: 10;
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
+            width: 90%; 
+            max-width: 420px; /* 因應字體放大，微調最大寬度 */
+            padding: 24px;
             box-sizing: border-box;
             transition: transform 0.1s ease-out, opacity 0.5s ease;
         }
 
-        /* 開機動畫結束後的登場狀態 */
         #uiLayer.ready {
             opacity: 1;
             transform: scale(1);
         }
 
-        .wrapper-box { width: 100%; }
+        .wrapper-box { 
+            width: 100%; 
+            box-sizing: border-box;
+        }
 
         .decor-tag {
-            font-size: 11px;
+            font-size: 12px; /* 稍微放大 */
             color: #00aa22;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             margin-bottom: 20px;
             text-transform: uppercase;
             border-bottom: 1px solid rgba(0, 255, 65, 0.3);
             padding-bottom: 5px;
+            word-break: break-all;
         }
 
         h2 {
             margin: 10px 0 5px 0;
             color: #00ff41;
-            font-size: 24px;
+            font-size: 26px; /* 標題顯著放大 */
             letter-spacing: 2px;
             text-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
         }
 
         .subtitle {
             color: #00aa22;
-            font-size: 12px;
+            font-size: 13px; /* 稍微放大 */
             margin-bottom: 30px;
             letter-spacing: 1px;
         }
 
+        /* 輸入框字體優化 */
         .input-field {
             width: 100%;
-            padding: 14px 15px;
+            padding: 16px 15px; /* 微調內襯墊 */
             margin-bottom: 20px;
             background-color: transparent;
             border: 1px solid rgba(0, 255, 65, 0.3);
             border-left: 4px solid #00ff41;
             color: #00ff41;
-            font-size: 15px;
+            font-size: 17px; /* 輸入字體放大 */
             font-family: monospace;
             box-sizing: border-box;
             outline: none;
             transition: all 0.3s;
+            -webkit-appearance: none; 
+            border-radius: 0;
         }
 
         .input-field::placeholder { color: rgba(0, 255, 65, 0.3); }
-
         .input-field:focus, .input-field:hover {
             border-color: #00ff41;
             box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
             background-color: rgba(0, 255, 65, 0.05);
         }
 
+        /* 按鈕字體優化 */
         button {
             width: 100%;
-            padding: 15px;
+            padding: 16px;
             background-color: #00ff41; 
             border: none;
             color: #020603;
-            font-size: 15px;
+            font-size: 17px; /* 按鈕字體放大 */
             font-weight: bold;
             letter-spacing: 2px;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
             margin-top: 10px;
+            border-radius: 0;
+            -webkit-appearance: none;
         }
 
         button:hover {
@@ -137,25 +147,28 @@
             width: 100vw; height: 100vh;
             background-color: #010402;
             z-index: 999;
-            padding: 30px;
+            padding: 24px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             align-items: flex-start;
-            font-size: 13px;
-            line-height: 1.5;
+            font-size: 14px; /* 開機代碼字體放大 */
+            line-height: 1.6;
             letter-spacing: 1px;
             opacity: 1;
             transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
+        #bootConsole {
+            width: 100%;
+            word-break: break-all; 
+        }
         #bootConsole::after { content: "█"; animation: cursorBlink 0.8s infinite; }
         @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .boot-flash { animation: terminalFlash 0.3s ease-out; }
         @keyframes terminalFlash { 0% { background-color: rgba(0, 255, 65, 0.3); } 100% { background-color: #010402; } }
 
-        /* ==================== 新增：解密載入中動畫層 ==================== */
+        /* 解密載入中動畫層 */
         #decryptingStage {
             display: none;
             width: 100%;
@@ -176,21 +189,60 @@
             height: 100%;
             background-color: #00ff41;
             box-shadow: 0 0 10px #00ff41;
-            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); /* 控制載入條的平滑度與速度 */
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ==================== 新增：內容淡入動畫 ==================== */
+        /* Login Successful 動態標籤 */
+        #loginSuccessAnimation {
+            display: none;
+            text-align: center;
+            border: 1px solid #00ff41;
+            padding: 24px;
+            background: rgba(0, 255, 65, 0.02);
+            box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.1);
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            box-sizing: border-box;
+        }
+
+        #loginSuccessAnimation.pop-in {
+            opacity: 1;
+            transform: scale(1);
+            animation: successGlow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes successGlow {
+            0% { box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.1), 0 0 10px rgba(0, 255, 65, 0.1); }
+            100% { box-shadow: inset 0 0 25px rgba(0, 255, 65, 0.2), 0 0 25px rgba(0, 255, 65, 0.4); }
+        }
+
+        .success-banner {
+            font-size: 22px; /* 放大 */
+            font-weight: bold;
+            color: #00ff41;
+            letter-spacing: 3px;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
+            word-break: break-word;
+        }
+
+        /* 最終展示內文本內容 */
         #protectedContent {
             display: none;
             opacity: 0;
-            transform: translateY(15px); /* 初始位置稍微偏下，形成上浮感 */
-            transition: opacity 1.2s ease, transform 1.2s ease; /* 柔和緩慢的 1.2 秒淡入 */
+            transform: translateY(20px);
+            transition: opacity 1.5s cubic-bezier(0.215, 0.610, 0.355, 1), transform 1.5s cubic-bezier(0.215, 0.610, 0.355, 1);
         }
 
-        /* 當被賦予入場券時觸發 CSS 動畫 */
         #protectedContent.fade-in-active {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        #protectedContent p {
+            font-size: 16px; /* 內容字體放大，提升閱讀感 */
+            word-break: break-word; 
         }
 
         /* 中央獨立錯誤警報 */
@@ -201,12 +253,12 @@
             background-color: #020603;
             border: 1px solid #ff3333;
             border-left: 6px solid #ff3333;
-            padding: 25px 40px;
+            padding: 24px 25px;
             color: #ff3333;
             font-family: monospace;
-            font-size: 14px;
+            font-size: 14px; /* 微調放大 */
             font-weight: bold;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             z-index: 100;
             box-shadow: 0 0 30px rgba(255, 51, 51, 0.4);
             text-align: center;
@@ -215,6 +267,10 @@
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.5s ease, visibility 0.5s ease;
+            
+            width: 85%;
+            max-width: 360px;
+            box-sizing: border-box;
         }
 
         #errorPopup.show { opacity: 1; visibility: visible; transition: none; }
@@ -222,11 +278,17 @@
 
         @keyframes glitch {
             0% { transform: translate(-50%, -50%) skew(0deg); }
-            20% { transform: translate(-53%, -48%) skew(-5deg); }
-            40% { transform: translate(-47%, -52%) skew(5deg); }
-            60% { transform: translate(-51%, -51%) skew(-2deg); }
-            80% { transform: translate(-49%, -49%) skew(2deg); }
+            20% { transform: translate(-52%, -49%) skew(-3deg); }
+            40% { transform: translate(-48%, -51%) skew(3deg); }
+            60% { transform: translate(-50%, -50%) skew(-1deg); }
+            80% { transform: translate(-49%, -49%) skew(1deg); }
             100% { transform: translate(-50%, -50%) skew(0deg); }
+        }
+
+        @media (max-width: 350px) {
+            #uiLayer { padding: 15px; }
+            h2 { font-size: 20px; }
+            .success-banner { font-size: 17px; letter-spacing: 2px; }
         }
     </style>
 </head>
@@ -238,19 +300,19 @@
 
     <div id="errorPopup">
         ⚠️ ACCESS DENIED<br>
-        <span style="font-size: 11px; color: rgba(255,51,51,0.7); letter-spacing: 1px;">ERROR: INVALID OPERATOR CREDENTIALS</span>
+        <span style="font-size: 12px; color: rgba(255,51,51,0.7); letter-spacing: 1px;">ERROR: INVALID OPERATOR CREDENTIALS</span>
     </div>
 
     <div id="uiLayer">
         <div id="loginScreen" class="wrapper-box">
-            <div class="decor-tag">SYS // TERMINAL_ACCESS_V6.0</div>
+            <div class="decor-tag">SYS // PRIVATE TERMINAL_ACCESS_V2.0</div>
             <h2>SYSTEM LOCKED</h2>
             <div class="subtitle">INPUT CREDENTIALS TO VERIFY IDENTITY</div>
             
             <input type="text" id="usernameInput" class="input-field" placeholder="ENTER OPERATOR ID...">
             <input type="password" id="passwordInput" class="input-field" placeholder="ENTER ACCESS KEY...">
             
-            <button onclick="checkCredentials()">EXECUTE LOG-IN</button>
+            <button onclick="checkCredentials()">LOG-IN</button>
         </div>
 
         <div id="decryptingStage" class="wrapper-box">
@@ -262,15 +324,19 @@
             </div>
         </div>
 
+        <div id="loginSuccessAnimation" class="wrapper-box">
+            <div class="success-banner"> LOGIN SUCCESSFUL </div>
+            <div style="font-size: 12px; color: #00aa22; letter-spacing: 2px; margin-top: 5px;">ACCESS GRANTED // CLEARANCE LEVEL MAX</div>
+        </div>
+
         <div id="protectedContent" class="wrapper-box">
             <div class="decor-tag">SYS // SECURE NETWORK</div>
-            <h2 style="color: #00ff41;">DECRYPTION SUCCESS</h2>
-            <div class="subtitle">IDENTITY VERIFIED // WELCOME BACK</div>
+            <h2 style="color: #00ff41;">IDENTITY VERIFIED // WELCOME BACK</h2><br>
             
-            <p style="font-size: 14px; line-height: 1.8; color: #00aa22;">
+            <p style="line-height: 1.8; color: #00aa22; margin: 0;">
                 >> Connection Established.<br>
-                >> Security level: OMNISCIENT.<br>
-                >> Terminal state: PERMANENT_UNLOCK.<br>
+                >> Security level: highly confidential<br>
+                >> Terminal state: PERMANENT_UNLOCK.<br><br>
                 Dr. 博士，歡迎進入系統深層網路。核心資料庫已完全敞開。
             </p>
         </div>
@@ -279,7 +345,7 @@
     <script>
         // 開機日誌腳本
         const bootLogs = [
-            "PRTS(OS) v5.2.0-neural_link loading...",
+            "PRTS(OS) v5.5.0-universal_link loading...",
             "CORE LAYER INTERFACE INITIALIZED [OK]",
             "ESTABLISHING SECURE HANDSHAKE WITH ROADS_ISLAND_MAIN...",
             "BYPASSING LOCAL FRAMEWORKS... DONE",
@@ -301,15 +367,16 @@
                 setTimeout(() => {
                     bootScreen.style.opacity = "0";
                     uiLayer.classList.add("ready");
-                    setTimeout(() => { bootScreen.style.removeProperty; bootScreen.style.display="none"; }, 800);
+                    setTimeout(() => { bootScreen.style.display="none"; }, 800);
                 }, 300);
             }
         }
-
         window.addEventListener("DOMContentLoaded", () => { setTimeout(printLog, 500); });
 
         // 滑鼠視差滾動
         document.addEventListener('mousemove', (e) => {
+            if (matchMedia('(pointer: coarse)').matches) return; 
+            
             const mouseX = (e.clientX - window.innerWidth / 2) / 100;
             const mouseY = (e.clientY - window.innerHeight / 2) / 100;
             document.getElementById('bgLayer').style.transform = `translate(${mouseX * -2}px, ${mouseY * -2}px)`;
@@ -318,7 +385,7 @@
             }
         });
 
-        // 登入與解密過渡動畫邏輯
+        // 登入流轉核心邏輯
         const CORRECT_USERNAME = "doctor"; 
         const CORRECT_PASSWORD = "ark"; 
         let popupTimer = null; 
@@ -329,44 +396,50 @@
             const popup = document.getElementById("errorPopup");
             
             if (userField === CORRECT_USERNAME && passField === CORRECT_PASSWORD) {
-                // 1. 隱藏錯誤訊息並關閉登入框
                 popup.classList.remove("show");
                 if(popupTimer) clearTimeout(popupTimer);
                 document.getElementById("loginScreen").style.display = "none";
                 
-                // 2. 顯示解密過渡階段
+                // 階段 1：顯示進度條
                 const decryptStage = document.getElementById("decryptingStage");
                 const barFill = document.getElementById("progressBarFill");
                 const percentText = document.getElementById("progressPercent");
                 decryptStage.style.display = "block";
                 
-                // 觸發進度條滿格動畫（利用 CSS Transition 跑 1.5 秒）
                 void barFill.offsetWidth; 
                 barFill.style.width = "100%";
                 
-                // 動態跑 0% -> 100% 的文字數字
                 let count = 0;
                 let countInterval = setInterval(() => {
-                    count += 5; // 每次遞增 5%
+                    count += 5;
                     percentText.innerText = `CORE DATA PACKETS: ${count}%`;
                     if(count >= 100) {
                         clearInterval(countInterval);
                         
-                        // 3. 載入條完成後，隱藏載入畫面，淡入真正的終端文字內容
+                        // 階段 2：切換至 Login Successful 動畫
                         setTimeout(() => {
                             decryptStage.style.display = "none";
-                            const content = document.getElementById("protectedContent");
-                            content.style.display = "block";
                             
-                            // 觸發 CSS Transition 的平滑優雅淡入與上浮
-                            void content.offsetWidth;
-                            content.classList.add("fade-in-active");
-                        }, 200); // 跑滿 100% 後稍微停頓 0.2 秒再切換，更有真實感
+                            const successAnim = document.getElementById("loginSuccessAnimation");
+                            successAnim.style.display = "block";
+                            void successAnim.offsetWidth;
+                            successAnim.classList.add("pop-in");
+                            
+                            // 階段 3：Login Successful 後，淡入內文
+                            setTimeout(() => {
+                                successAnim.style.display = "none";
+                                
+                                const content = document.getElementById("protectedContent");
+                                content.style.display = "block";
+                                void content.offsetWidth;
+                                content.classList.add("fade-in-active");
+                            }, 1500); 
+
+                        }, 200);
                     }
-                }, 70); // 每 70 毫秒跑一動，總計約 1.4 秒完成
+                }, 60);
 
             } else {
-                // 密碼錯誤邏輯
                 if (popupTimer) clearTimeout(popupTimer);
                 popup.classList.remove("show", "glitch-effect");
                 void popup.offsetWidth; 
@@ -375,7 +448,7 @@
             }
         }
 
-        // Enter 鍵監聽
+        // 鍵盤監聽
         document.getElementById("usernameInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") { event.preventDefault(); document.getElementById("passwordInput").focus(); }
         });
