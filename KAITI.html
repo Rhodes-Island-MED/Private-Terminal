@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRTS TERMINAL - 系統初始化</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #020603;
+            color: #00ff41;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden; 
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ==================== 科技風開機動畫層 ==================== */
+        #bootScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: #010402;
+            z-index: 999; /* 確保在最頂層 */
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            font-size: 13px;
+            line-height: 1.5;
+            letter-spacing: 1px;
+            opacity: 1;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 終端光標閃爍效果 */
+        #bootConsole::after {
+            content: "█";
+            animation: cursorBlink 0.8s infinite;
+        }
+
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* 開機完成時的全螢幕閃爍衝擊波 */
+        .boot-flash {
+            animation: terminalFlash 0.3s ease-out;
+        }
+
+        @keyframes terminalFlash {
+            0% { background-color: rgba(0, 255, 65, 0.3); }
+            100% { background-color: #010402; }
+        }
+
+        /* ==================== 核心主體樣式 ==================== */
+        #bgLayer {
+            position: absolute;
+            top: -5%; left: -5%; 
+            width: 110%; height: 110%;
+            background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 1;
+            transition: transform 0.1s ease-out;
+        }
+
+        #bgLayer::after {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(0, 255, 65, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        #uiLayer {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: transform 0.1s ease-out;
+            /* 預設先稍微模糊與縮小，配合開機完成後的登場 */
+            opacity: 0;
+            transform: scale(0.98);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        /* 當開機動畫結束，主介面優雅登場 */
+        #uiLayer.ready {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .wrapper-box { width: 100%; }
+
+        .decor-tag {
+            font-size: 11px;
+            color: #00aa22;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.3);
+            padding-bottom: 5px;
+        }
+
+        h2 {
+            margin: 10px 0 5px 0;
+            color: #00ff41;
+            font-size: 24px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+        }
+
+        .subtitle {
+            color: #00aa22;
+            font-size: 12px;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 15px;
+            margin-bottom: 20px;
+            background-color: transparent;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-left: 4px solid #00ff41;
+            color: #00ff41;
+            font-size: 15px;
+            font-family: monospace;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-field::placeholder { color: rgba(0, 255, 65, 0.3); }
+
+        .input-field:focus, .input-field:hover {
+            border-color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+            background-color: rgba(0, 255, 65, 0.05);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #00ff41; 
+            border: none;
+            color: #020603;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #ffffff;
+            color: #000000;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
+        }
+
+        /* 中央獨立警報 */
+        #errorPopup {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #020603;
+            border: 1px solid #ff3333;
+            border-left: 6px solid #ff3333;
+            padding: 25px 40px;
+            color: #ff3333;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(255, 51, 51, 0.4);
+            text-align: center;
+            pointer-events: none;
+            text-shadow: 0 0 5px rgba(255, 51, 51, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        #errorPopup.show {
+            opacity: 1;
+            visibility: visible;
+            transition: none;
+        }
+
+        .glitch-effect { animation: glitch 0.3s linear; }
+
+        @keyframes glitch {
+            0% { transform: translate(-50%, -50%) skew(0deg); }
+            20% { transform: translate(-53%, -48%) skew(-5deg); }
+            40% { transform: translate(-47%, -52%) skew(5deg); }
+            60% { transform: translate(-51%, -51%) skew(-2deg); }
+            80% { transform: translate(-49%, -49%) skew(2deg); }
+            100% { transform: translate(-50%, -50%) skew(0deg); }
+        }
+
+        #protectedContent { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="bootScreen">
+        <div id="bootConsole"></div>
+    </div>
+
+    <div id="bgLayer"></div>
+
+    <div id="errorPopup">
+        ⚠️ ACCESS DENIED<br>
+        <span style="font-size: 11px; color: rgba(255,51,51,0.7); letter-spacing: 1px;">ERROR: INVALID OPERATOR CREDENTIALS</span>
+    </div>
+
+    <div id="uiLayer">
+        <div id="loginScreen" class="wrapper-box">
+            <div class="decor-tag">SYS // TERMINAL_ACCESS_V5.0</div>
+            <h2>SYSTEM LOCKED</h2>
+            <div class="subtitle">INPUT CREDENTIALS TO VERIFY IDENTITY</div>
+            
+            <input type="text" id="usernameInput" class="input-field" placeholder="ENTER OPERATOR ID...">
+            <input type="password" id="passwordInput" class="input-field" placeholder="ENTER ACCESS KEY...">
+            
+            <button onclick="checkCredentials()">EXECUTE LOG-IN</button>
+        </div>
+
+        <div id="protectedContent" class="wrapper-box">
+            <div class="decor-tag">SYS // SECURE NETWORK</div>
+            <h2 style="color: #00ff41;">DECRYPTION SUCCESS</h2>
+            <div class="subtitle">IDENTITY VERIFIED // WELCOME BACK</div>
+            
+            <p style="font-size: 14px; line-height: 1.8; color: #00aa22;">
+                >> Connection Established.<br>
+                >> Framework bypassed.<br>
+                >> Boot sequence executed successfully.<br>
+                Dr. 博士，歡迎進入系統深層網路。
+            </p>
+            
+            <button onclick="logout()" style="background-color: transparent; border: 1px solid #ff3333; color: #ff3333; margin-top: 20px;">DISCONNECT SESSION</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 開機日誌腳本 ====================
+        const bootLogs = [
+            "PRTS(OS) v4.9.2-neural_link loading...",
+            "CORE LAYER INTERFACE INITIALIZED [OK]",
+            "LOADING CRYPTOGRAPHIC MODULES...",
+            "ESTABLISHING SECURE HANDSHAKE WITH ROADS_ISLAND_MAIN...",
+            "BYPASSING LOCAL FRAMEWORKS... DONE",
+            "INJECTING GREEN_TERMINAL THEME SUBSYSTEM...",
+            "LOADING IDENTITY AUTHENTICATION GATEWAY...",
+            "SYSTEM PRE-CHECK COMPLETE. REDIRECTING TO INPUT INTERFACE..."
+        ];
+
+        const bootConsole = document.getElementById("bootConsole");
+        const bootScreen = document.getElementById("bootScreen");
+        const uiLayer = document.getElementById("uiLayer");
+        let logIndex = 0;
+
+        function printLog() {
+            if (logIndex < bootLogs.length) {
+                // 模擬打字效果，逐行打印日誌
+                bootConsole.innerHTML += ">> " + bootLogs[logIndex] + "<br>";
+                logIndex++;
+                // 隨機控制每行打印的速度（150ms ~ 400ms），看起來更像在運算
+                setTimeout(printLog, Math.random() * 250 + 150);
+            } else {
+                // 日誌跑完，觸發綠光閃爍衝擊動畫
+                bootScreen.classList.add("boot-flash");
+                
+                setTimeout(() => {
+                    // 開機畫面淡出
+                    bootScreen.style.opacity = "0";
+                    // 主登入界面以漸變登場
+                    uiLayer.classList.add("ready");
+                    
+                    // 完全淡出後移除開機層，釋放記憶體
+                    setTimeout(() => {
+                        bootScreen.style.display = "none";
+                    }, 800);
+                }, 300);
+            }
+        }
+
+        // 當網頁載入完成後自動執行開機動畫
+        window.addEventListener("DOMContentLoaded", () => {
+            setTimeout(printLog, 500); // 延遲半秒開始打印，更有儀式感
+        });
+
+
+        // ==================== 原有互動邏輯 (視差、驗證) ====================
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = (e.clientX - window.innerWidth / 2) / 100;
+            const mouseY = (e.clientY - window.innerHeight / 2) / 100;
+            document.getElementById('bgLayer').style.transform = `translate(${mouseX * -2}px, ${mouseY * -2}px)`;
+            // 只有當 UI 準備好後才套用滑鼠視差
+            if(uiLayer.classList.contains("ready")) {
+                uiLayer.style.transform = `translate(${mouseX * 2}px, ${mouseY * 2}px)`;
+            }
+        });
+
+        const CORRECT_USERNAME = "doctor"; 
+        const CORRECT_PASSWORD = "ark"; 
+        let popupTimer = null; 
+
+        function checkCredentials() {
+            const userField = document.getElementById("usernameInput").value.trim().toLowerCase();
+            const passField = document.getElementById("passwordInput").value.trim().toLowerCase();
+            const popup = document.getElementById("errorPopup");
+            
+            if (userField === CORRECT_USERNAME && passField === CORRECT_PASSWORD) {
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("protectedContent").style.display = "block";
+                popup.classList.remove("show");
+                if(popupTimer) clearTimeout(popupTimer);
+            } else {
+                if (popupTimer) clearTimeout(popupTimer);
+
+                popup.classList.remove("show", "glitch-effect");
+                void popup.offsetWidth; 
+
+                popup.classList.add("show", "glitch-effect");
+
+                popupTimer = setTimeout(() => {
+                    popup.classList.remove("show");
+                }, 3000);
+            }
+        }
+
+        document.getElementById("usernameInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("passwordInput").focus();
+            }
+        });
+
+        document.getElementById("passwordInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                checkCredentials();
+            }
+        });
+        
+        function logout() {
+            document.getElementById("usernameInput").value = "";
+            document.getElementById("passwordInput").value = "";
+            document.getElementById("protectedContent").style.display = "none";
+            document.getElementById("loginScreen").style.display = "block";
+        }
+    </script>
+</body>
+</html>
