@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRTS TERMINAL - 系統初始化</title>
+    <title>PRTS TERMINAL - 權限解鎖</title>
     <style>
         body {
             margin: 0;
@@ -20,48 +20,7 @@
             align-items: center;
         }
 
-        /* ==================== 科技風開機動畫層 ==================== */
-        #bootScreen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background-color: #010402;
-            z-index: 999; /* 確保在最頂層 */
-            padding: 30px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
-            font-size: 13px;
-            line-height: 1.5;
-            letter-spacing: 1px;
-            opacity: 1;
-            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* 終端光標閃爍效果 */
-        #bootConsole::after {
-            content: "█";
-            animation: cursorBlink 0.8s infinite;
-        }
-
-        @keyframes cursorBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        /* 開機完成時的全螢幕閃爍衝擊波 */
-        .boot-flash {
-            animation: terminalFlash 0.3s ease-out;
-        }
-
-        @keyframes terminalFlash {
-            0% { background-color: rgba(0, 255, 65, 0.3); }
-            100% { background-color: #010402; }
-        }
-
-        /* ==================== 核心主體樣式 ==================== */
+        /* 綠色調的動態背景網格 */
         #bgLayer {
             position: absolute;
             top: -5%; left: -5%; 
@@ -83,6 +42,7 @@
             pointer-events: none;
         }
 
+        /* UI 互動區 */
         #uiLayer {
             position: relative;
             z-index: 10;
@@ -90,14 +50,10 @@
             max-width: 400px;
             padding: 20px;
             box-sizing: border-box;
-            transition: transform 0.1s ease-out;
-            /* 預設先稍微模糊與縮小，配合開機完成後的登場 */
-            opacity: 0;
-            transform: scale(0.98);
-            transition: opacity 1s ease, transform 1s ease;
+            transition: transform 0.1s ease-out, opacity 0.5s ease;
         }
 
-        /* 當開機動畫結束，主介面優雅登場 */
+        /* 開機動畫結束後的登場狀態 */
         #uiLayer.ready {
             opacity: 1;
             transform: scale(1);
@@ -174,7 +130,70 @@
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
         }
 
-        /* 中央獨立警報 */
+        /* 開機動畫遮罩層 */
+        #bootScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: #010402;
+            z-index: 999;
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            font-size: 13px;
+            line-height: 1.5;
+            letter-spacing: 1px;
+            opacity: 1;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #bootConsole::after { content: "█"; animation: cursorBlink 0.8s infinite; }
+        @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .boot-flash { animation: terminalFlash 0.3s ease-out; }
+        @keyframes terminalFlash { 0% { background-color: rgba(0, 255, 65, 0.3); } 100% { background-color: #010402; } }
+
+        /* ==================== 新增：解密載入中動畫層 ==================== */
+        #decryptingStage {
+            display: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(0, 255, 65, 0.1);
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background-color: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); /* 控制載入條的平滑度與速度 */
+        }
+
+        /* ==================== 新增：內容淡入動畫 ==================== */
+        #protectedContent {
+            display: none;
+            opacity: 0;
+            transform: translateY(15px); /* 初始位置稍微偏下，形成上浮感 */
+            transition: opacity 1.2s ease, transform 1.2s ease; /* 柔和緩慢的 1.2 秒淡入 */
+        }
+
+        /* 當被賦予入場券時觸發 CSS 動畫 */
+        #protectedContent.fade-in-active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 中央獨立錯誤警報 */
         #errorPopup {
             position: fixed;
             top: 50%; left: 50%;
@@ -198,12 +217,7 @@
             transition: opacity 0.5s ease, visibility 0.5s ease;
         }
 
-        #errorPopup.show {
-            opacity: 1;
-            visibility: visible;
-            transition: none;
-        }
-
+        #errorPopup.show { opacity: 1; visibility: visible; transition: none; }
         .glitch-effect { animation: glitch 0.3s linear; }
 
         @keyframes glitch {
@@ -214,15 +228,11 @@
             80% { transform: translate(-49%, -49%) skew(2deg); }
             100% { transform: translate(-50%, -50%) skew(0deg); }
         }
-
-        #protectedContent { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="bootScreen">
-        <div id="bootConsole"></div>
-    </div>
+    <div id="bootScreen"><div id="bootConsole"></div></div>
 
     <div id="bgLayer"></div>
 
@@ -233,7 +243,7 @@
 
     <div id="uiLayer">
         <div id="loginScreen" class="wrapper-box">
-            <div class="decor-tag">SYS // TERMINAL_ACCESS_V5.0</div>
+            <div class="decor-tag">SYS // TERMINAL_ACCESS_V6.0</div>
             <h2>SYSTEM LOCKED</h2>
             <div class="subtitle">INPUT CREDENTIALS TO VERIFY IDENTITY</div>
             
@@ -243,6 +253,15 @@
             <button onclick="checkCredentials()">EXECUTE LOG-IN</button>
         </div>
 
+        <div id="decryptingStage" class="wrapper-box">
+            <div class="decor-tag">SYS // DECRYPTION_PROGRESS</div>
+            <h2>SYNCHRONIZING...</h2>
+            <div class="subtitle" id="progressPercent">CORE DATA PACKETS: 0%</div>
+            <div class="progress-bar-container">
+                <div id="progressBarFill" class="progress-bar-fill"></div>
+            </div>
+        </div>
+
         <div id="protectedContent" class="wrapper-box">
             <div class="decor-tag">SYS // SECURE NETWORK</div>
             <h2 style="color: #00ff41;">DECRYPTION SUCCESS</h2>
@@ -250,25 +269,20 @@
             
             <p style="font-size: 14px; line-height: 1.8; color: #00aa22;">
                 >> Connection Established.<br>
-                >> Framework bypassed.<br>
-                >> Boot sequence executed successfully.<br>
-                Dr. 博士，歡迎進入系統深層網路。
+                >> Security level: OMNISCIENT.<br>
+                >> Terminal state: PERMANENT_UNLOCK.<br>
+                Dr. 博士，歡迎進入系統深層網路。核心資料庫已完全敞開。
             </p>
-            
-            <button onclick="logout()" style="background-color: transparent; border: 1px solid #ff3333; color: #ff3333; margin-top: 20px;">DISCONNECT SESSION</button>
         </div>
     </div>
 
     <script>
-        // ==================== 開機日誌腳本 ====================
+        // 開機日誌腳本
         const bootLogs = [
-            "PRTS(OS) v4.9.2-neural_link loading...",
+            "PRTS(OS) v5.2.0-neural_link loading...",
             "CORE LAYER INTERFACE INITIALIZED [OK]",
-            "LOADING CRYPTOGRAPHIC MODULES...",
             "ESTABLISHING SECURE HANDSHAKE WITH ROADS_ISLAND_MAIN...",
             "BYPASSING LOCAL FRAMEWORKS... DONE",
-            "INJECTING GREEN_TERMINAL THEME SUBSYSTEM...",
-            "LOADING IDENTITY AUTHENTICATION GATEWAY...",
             "SYSTEM PRE-CHECK COMPLETE. REDIRECTING TO INPUT INTERFACE..."
         ];
 
@@ -279,46 +293,32 @@
 
         function printLog() {
             if (logIndex < bootLogs.length) {
-                // 模擬打字效果，逐行打印日誌
                 bootConsole.innerHTML += ">> " + bootLogs[logIndex] + "<br>";
                 logIndex++;
-                // 隨機控制每行打印的速度（150ms ~ 400ms），看起來更像在運算
-                setTimeout(printLog, Math.random() * 250 + 150);
+                setTimeout(printLog, Math.random() * 200 + 100);
             } else {
-                // 日誌跑完，觸發綠光閃爍衝擊動畫
                 bootScreen.classList.add("boot-flash");
-                
                 setTimeout(() => {
-                    // 開機畫面淡出
                     bootScreen.style.opacity = "0";
-                    // 主登入界面以漸變登場
                     uiLayer.classList.add("ready");
-                    
-                    // 完全淡出後移除開機層，釋放記憶體
-                    setTimeout(() => {
-                        bootScreen.style.display = "none";
-                    }, 800);
+                    setTimeout(() => { bootScreen.style.removeProperty; bootScreen.style.display="none"; }, 800);
                 }, 300);
             }
         }
 
-        // 當網頁載入完成後自動執行開機動畫
-        window.addEventListener("DOMContentLoaded", () => {
-            setTimeout(printLog, 500); // 延遲半秒開始打印，更有儀式感
-        });
+        window.addEventListener("DOMContentLoaded", () => { setTimeout(printLog, 500); });
 
-
-        // ==================== 原有互動邏輯 (視差、驗證) ====================
+        // 滑鼠視差滾動
         document.addEventListener('mousemove', (e) => {
             const mouseX = (e.clientX - window.innerWidth / 2) / 100;
             const mouseY = (e.clientY - window.innerHeight / 2) / 100;
             document.getElementById('bgLayer').style.transform = `translate(${mouseX * -2}px, ${mouseY * -2}px)`;
-            // 只有當 UI 準備好後才套用滑鼠視差
             if(uiLayer.classList.contains("ready")) {
                 uiLayer.style.transform = `translate(${mouseX * 2}px, ${mouseY * 2}px)`;
             }
         });
 
+        // 登入與解密過渡動畫邏輯
         const CORRECT_USERNAME = "doctor"; 
         const CORRECT_PASSWORD = "ark"; 
         let popupTimer = null; 
@@ -329,45 +329,59 @@
             const popup = document.getElementById("errorPopup");
             
             if (userField === CORRECT_USERNAME && passField === CORRECT_PASSWORD) {
-                document.getElementById("loginScreen").style.display = "none";
-                document.getElementById("protectedContent").style.display = "block";
+                // 1. 隱藏錯誤訊息並關閉登入框
                 popup.classList.remove("show");
                 if(popupTimer) clearTimeout(popupTimer);
-            } else {
-                if (popupTimer) clearTimeout(popupTimer);
+                document.getElementById("loginScreen").style.display = "none";
+                
+                // 2. 顯示解密過渡階段
+                const decryptStage = document.getElementById("decryptingStage");
+                const barFill = document.getElementById("progressBarFill");
+                const percentText = document.getElementById("progressPercent");
+                decryptStage.style.display = "block";
+                
+                // 觸發進度條滿格動畫（利用 CSS Transition 跑 1.5 秒）
+                void barFill.offsetWidth; 
+                barFill.style.width = "100%";
+                
+                // 動態跑 0% -> 100% 的文字數字
+                let count = 0;
+                let countInterval = setInterval(() => {
+                    count += 5; // 每次遞增 5%
+                    percentText.innerText = `CORE DATA PACKETS: ${count}%`;
+                    if(count >= 100) {
+                        clearInterval(countInterval);
+                        
+                        // 3. 載入條完成後，隱藏載入畫面，淡入真正的終端文字內容
+                        setTimeout(() => {
+                            decryptStage.style.display = "none";
+                            const content = document.getElementById("protectedContent");
+                            content.style.display = "block";
+                            
+                            // 觸發 CSS Transition 的平滑優雅淡入與上浮
+                            void content.offsetWidth;
+                            content.classList.add("fade-in-active");
+                        }, 200); // 跑滿 100% 後稍微停頓 0.2 秒再切換，更有真實感
+                    }
+                }, 70); // 每 70 毫秒跑一動，總計約 1.4 秒完成
 
+            } else {
+                // 密碼錯誤邏輯
+                if (popupTimer) clearTimeout(popupTimer);
                 popup.classList.remove("show", "glitch-effect");
                 void popup.offsetWidth; 
-
                 popup.classList.add("show", "glitch-effect");
-
-                popupTimer = setTimeout(() => {
-                    popup.classList.remove("show");
-                }, 3000);
+                popupTimer = setTimeout(() => { popup.classList.remove("show"); }, 3000);
             }
         }
 
+        // Enter 鍵監聽
         document.getElementById("usernameInput").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                document.getElementById("passwordInput").focus();
-            }
+            if (event.key === "Enter") { event.preventDefault(); document.getElementById("passwordInput").focus(); }
         });
-
         document.getElementById("passwordInput").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                checkCredentials();
-            }
+            if (event.key === "Enter") { event.preventDefault(); checkCredentials(); }
         });
-        
-        function logout() {
-            document.getElementById("usernameInput").value = "";
-            document.getElementById("passwordInput").value = "";
-            document.getElementById("protectedContent").style.display = "none";
-            document.getElementById("loginScreen").style.display = "block";
-        }
     </script>
 </body>
 </html>
-
