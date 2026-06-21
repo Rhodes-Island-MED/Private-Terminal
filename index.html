@@ -2,10 +2,10 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>PRTS TERMINAL</title>
     <style>
-        body {
+        html, body {
             margin: 0;
             padding: 0;
             background-color: #020603;
@@ -13,35 +13,29 @@
             font-family: 'Courier New', Courier, monospace;
             overflow: hidden; 
             position: relative;
-            height: 100vh;
-            width: 100vw;
+            height: 100%;
+            width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             -webkit-text-size-adjust: 100%; 
         }
 
-        /* 綠色調的動態背景網格 */
-        #bgLayer {
+        /* ==================== PRTS 浮動雷達背景層 ==================== */
+        #bgContainer {
             position: absolute;
-            top: -10%; left: -10%; 
-            width: 120%; height: 120%;
-            background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
+            top: -5%; left: -5%; /* 放大範圍，留出滑鼠浮動位移的緩衝空間，避免穿幫邊緣 */
+            width: 110%; height: 110%;
             z-index: 1;
-            transition: transform 0.1s ease-out;
+            pointer-events: none;
+            transition: opacity 1s ease, transform 0.2s cubic-bezier(0.25, 1, 0.5, 1); /* 流暢的浮動跟隨 */
+            opacity: 1;
         }
 
-        #bgLayer::after {
-            content: "";
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100vw; height: 100vw;
-            max-width: 800px; max-height: 800px;
-            background: radial-gradient(circle, rgba(0, 255, 65, 0.05) 0%, transparent 60%);
-            pointer-events: none;
+        #ecgCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         /* UI 互動主層 */
@@ -49,10 +43,13 @@
             position: relative;
             z-index: 10;
             width: 90%; 
-            max-width: 420px; /* 因應字體放大，微調最大寬度 */
+            max-width: 400px; 
             padding: 24px;
             box-sizing: border-box;
             transition: transform 0.1s ease-out, opacity 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #uiLayer.ready {
@@ -65,8 +62,16 @@
             box-sizing: border-box;
         }
 
+        #loginScreen {
+            width: 100%;
+        }
+
+        .login-form-core {
+            width: 100%;
+        }
+
         .decor-tag {
-            font-size: 12px; /* 稍微放大 */
+            font-size: 11px; 
             color: #00aa22;
             letter-spacing: 2px;
             margin-bottom: 20px;
@@ -79,28 +84,27 @@
         h2 {
             margin: 10px 0 5px 0;
             color: #00ff41;
-            font-size: 26px; /* 標題顯著放大 */
+            font-size: clamp(20px, 6vw, 26px); /* 自適應螢幕大小的縮放字體 */
             letter-spacing: 2px;
             text-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
         }
 
         .subtitle {
             color: #00aa22;
-            font-size: 13px; /* 稍微放大 */
+            font-size: 12px; 
             margin-bottom: 30px;
             letter-spacing: 1px;
         }
 
-        /* 輸入框字體優化 */
         .input-field {
             width: 100%;
-            padding: 16px 15px; /* 微調內襯墊 */
+            padding: 16px 15px; 
             margin-bottom: 20px;
             background-color: transparent;
             border: 1px solid rgba(0, 255, 65, 0.3);
             border-left: 4px solid #00ff41;
             color: #00ff41;
-            font-size: 17px; /* 輸入字體放大 */
+            font-size: 16px; 
             font-family: monospace;
             box-sizing: border-box;
             outline: none;
@@ -116,14 +120,13 @@
             background-color: rgba(0, 255, 65, 0.05);
         }
 
-        /* 按鈕字體優化 */
         button {
             width: 100%;
             padding: 16px;
             background-color: #00ff41; 
             border: none;
             color: #020603;
-            font-size: 17px; /* 按鈕字體放大 */
+            font-size: 16px; 
             font-weight: bold;
             letter-spacing: 2px;
             cursor: pointer;
@@ -153,7 +156,7 @@
             flex-direction: column;
             justify-content: flex-start;
             align-items: flex-start;
-            font-size: 14px; /* 開機代碼字體放大 */
+            font-size: 13px; 
             line-height: 1.6;
             letter-spacing: 1px;
             opacity: 1;
@@ -204,6 +207,7 @@
             transform: scale(0.9);
             transition: opacity 0.4s ease, transform 0.4s ease;
             box-sizing: border-box;
+            width: 100%;
         }
 
         #loginSuccessAnimation.pop-in {
@@ -217,22 +221,13 @@
             100% { box-shadow: inset 0 0 25px rgba(0, 255, 65, 0.2), 0 0 25px rgba(0, 255, 65, 0.4); }
         }
 
-        .success-banner {
-            font-size: 22px; /* 放大 */
-            font-weight: bold;
-            color: #00ff41;
-            letter-spacing: 3px;
-            margin: 0;
-            text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
-            word-break: break-word;
-        }
-
         /* 最終展示內文本內容 */
         #protectedContent {
             display: none;
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 1.5s cubic-bezier(0.215, 0.610, 0.355, 1), transform 1.5s cubic-bezier(0.215, 0.610, 0.355, 1);
+            width: 100%;
         }
 
         #protectedContent.fade-in-active {
@@ -241,7 +236,7 @@
         }
 
         #protectedContent p {
-            font-size: 16px; /* 內容字體放大，提升閱讀感 */
+            font-size: 15px; 
             word-break: break-word; 
         }
 
@@ -256,7 +251,7 @@
             padding: 24px 25px;
             color: #ff3333;
             font-family: monospace;
-            font-size: 14px; /* 微調放大 */
+            font-size: 14px; 
             font-weight: bold;
             letter-spacing: 1px;
             z-index: 100;
@@ -267,7 +262,6 @@
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.5s ease, visibility 0.5s ease;
-            
             width: 85%;
             max-width: 360px;
             box-sizing: border-box;
@@ -285,10 +279,9 @@
             100% { transform: translate(-50%, -50%) skew(0deg); }
         }
 
+        /* 針對窄螢幕超極端微調 */
         @media (max-width: 350px) {
             #uiLayer { padding: 15px; }
-            h2 { font-size: 20px; }
-            .success-banner { font-size: 17px; letter-spacing: 2px; }
         }
     </style>
 </head>
@@ -296,7 +289,9 @@
 
     <div id="bootScreen"><div id="bootConsole"></div></div>
 
-    <div id="bgLayer"></div>
+    <div id="bgContainer">
+        <canvas id="ecgCanvas"></canvas>
+    </div>
 
     <div id="errorPopup">
         ⚠️ ACCESS DENIED<br>
@@ -305,14 +300,16 @@
 
     <div id="uiLayer">
         <div id="loginScreen" class="wrapper-box">
-            <div class="decor-tag">SYS // PRIVATE TERMINAL_ACCESS_V2.0</div>
-            <h2>SYSTEM LOCKED</h2>
-            <div class="subtitle">INPUT CREDENTIALS TO VERIFY IDENTITY</div>
-            
-            <input type="text" id="usernameInput" class="input-field" placeholder="ENTER OPERATOR ID...">
-            <input type="password" id="passwordInput" class="input-field" placeholder="ENTER ACCESS KEY...">
-            
-            <button onclick="checkCredentials()">LOG-IN</button>
+            <div class="login-form-core">
+                <div class="decor-tag">SYS // PRTS_RADAR_V15.0_FLOAT</div>
+                <h2>SYSTEM LOCKED</h2>
+                <div class="subtitle">INPUT CREDENTIALS TO VERIFY IDENTITY</div>
+                
+                <input type="text" id="usernameInput" class="input-field" placeholder="ENTER OPERATOR ID...">
+                <input type="password" id="passwordInput" class="input-field" placeholder="ENTER ACCESS KEY...">
+                
+                <button onclick="checkCredentials()">EXECUTE LOG-IN</button>
+            </div>
         </div>
 
         <div id="decryptingStage" class="wrapper-box">
@@ -325,17 +322,18 @@
         </div>
 
         <div id="loginSuccessAnimation" class="wrapper-box">
-            <div class="success-banner"> LOGIN SUCCESSFUL </div>
+            <div class="success-banner" style="font-size: 22px; font-weight: bold; color: #00ff41; letter-spacing: 3px; text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);">[ LOGIN SUCCESSFUL ]</div>
             <div style="font-size: 12px; color: #00aa22; letter-spacing: 2px; margin-top: 5px;">ACCESS GRANTED // CLEARANCE LEVEL MAX</div>
         </div>
 
         <div id="protectedContent" class="wrapper-box">
             <div class="decor-tag">SYS // SECURE NETWORK</div>
-            <h2 style="color: #00ff41;">IDENTITY VERIFIED // WELCOME BACK</h2><br>
+            <h2 style="color: #00ff41;">DECRYPTION SUCCESS</h2>
+            <div class="subtitle">IDENTITY VERIFIED // WELCOME BACK</div>
             
             <p style="line-height: 1.8; color: #00aa22; margin: 0;">
                 >> Connection Established.<br>
-                >> Security level: highly confidential<br>
+                >> Security level: OMNISCIENT.<br>
                 >> Terminal state: PERMANENT_UNLOCK.<br><br>
                 Dr. 博士，歡迎進入系統深層網路。核心資料庫已完全敞開。
             </p>
@@ -343,7 +341,136 @@
     </div>
 
     <script>
-        // 開機日誌腳本
+        // ==================== 1. 高解析度自適應 HTML5 Canvas 繪製 ====================
+        const bgContainer = document.getElementById('bgContainer');
+        const canvas = document.getElementById('ecgCanvas');
+        const ctx = canvas.getContext('2d');
+        let animationFrameId = null; 
+        let isStopped = false;
+
+        function resizeCanvas() {
+            const rect = bgContainer.getBoundingClientRect();
+            // 獲取裝置像素比（Retina 螢幕可能為 2 或 3），解決高解析度螢幕模糊問題
+            const dpr = window.devicePixelRatio || 1;
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            // 縮放 Canvas 上下文，這樣後續的繪圖座標就不用自己乘以 dpr 
+            ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let scanX = 0; 
+        const scanSpeed = 3.5; 
+
+        // 完美的 P-Q-R-S-T 健康生理心電圖
+        function getEcgY(x, logicalWidth, logicalHeight) {
+            const centerY = logicalHeight / 2;
+            const localX = (x % 450); 
+            
+            if (localX > 40 && localX < 60) {
+                return centerY - Math.sin((localX - 40) * Math.PI / 20) * 6;
+            } else if (localX >= 75 && localX < 82) {
+                return centerY + (localX - 75) * 2;
+            } else if (localX >= 82 && localX < 90) {
+                return centerY - 14 + (localX - 82) * -11;
+            } else if (localX >= 90 && localX < 98) {
+                return centerY - 102 + (localX - 90) * 16;
+            } else if (localX >= 98 && localX < 108) {
+                return centerY + 26 - (localX - 98) * 2.6;
+            } else if (localX >= 140 && localX < 175) {
+                return centerY - Math.sin((localX - 140) * Math.PI / 35) * 15;
+            } else if (localX >= 185 && localX < 200) {
+                return centerY - Math.sin((localX - 185) * Math.PI / 15) * 2;
+            }
+            return centerY; 
+        }
+
+        function drawEcgRadar() {
+            if (isStopped) return;
+
+            const logicalWidth = canvas.width / (window.devicePixelRatio || 1);
+            const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
+
+            ctx.fillStyle = 'rgba(2, 6, 3, 0.05)';
+            ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+
+            scanX += scanSpeed;
+            if (scanX > logicalWidth) scanX = 0;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#00ff41';
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00ff41';
+
+            let startX = Math.max(0, scanX - 15);
+            for (let x = startX; x <= scanX; x++) {
+                let y = getEcgY(x, logicalWidth, logicalHeight);
+                if (x === startX) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            let gradient = ctx.createLinearGradient(scanX - 40, 0, scanX, 0);
+            gradient.addColorStop(0, 'rgba(0, 255, 65, 0)');
+            gradient.addColorStop(0.85, 'rgba(0, 255, 65, 0.03)');
+            gradient.addColorStop(1, 'rgba(0, 255, 65, 0.10)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(scanX - 40, 0, 40, logicalHeight);
+
+            animationFrameId = requestAnimationFrame(drawEcgRadar);
+        }
+        
+        requestAnimationFrame(drawEcgRadar);
+
+
+        // ==================== 2. 滑鼠/行動裝置陀螺儀 視覺浮動交互效果 ====================
+        let targetX = 0, targetY = 0;
+        let currentX = 0, currentY = 0;
+        const easeAmount = 0.08; // 數值越小，移動越絲滑平緩
+
+        // 電腦端：滑鼠移動偵測
+        window.addEventListener('mousemove', (e) => {
+            if (isStopped) return;
+            // 計算滑鼠偏離螢幕中心的比例 (-0.5 ~ 0.5)
+            const normX = (e.clientX / window.innerWidth) - 0.5;
+            const normY = (e.clientY / window.innerHeight) - 0.5;
+            
+            // 往滑鼠移動的反方向產生微幅位移（最大位移 25 像素）
+            targetX = normX * -25;
+            targetY = normY * -25;
+        });
+
+        // 手機/行動裝置端：傾斜陀螺儀支援（選配，自動兼容無滑鼠環境）
+        window.addEventListener('deviceorientation', (e) => {
+            if (isStopped || !e.gamma || !e.beta) return;
+            // 限制傾斜角度在合理區間
+            const normX = Math.max(-30, Math.min(30, e.gamma)) / 30;
+            const normY = Math.max(-30, Math.min(30, e.beta)) / 30;
+            targetX = normX * -15;
+            targetY = normY * -15;
+        });
+
+        // 使用 LERP 內插演算法讓位移無比柔和滑順
+        function updateFloatEffect() {
+            if (isStopped) return;
+            currentX += (targetX - currentX) * easeAmount;
+            currentY += (targetY - currentY) * easeAmount;
+            
+            bgContainer.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            requestAnimationFrame(updateFloatEffect);
+        }
+        requestAnimationFrame(updateFloatEffect);
+
+
+        // ==================== 3. 終端機控制核心邏輯 ====================
         const bootLogs = [
             "PRTS(OS) v5.5.0-universal_link loading...",
             "CORE LAYER INTERFACE INITIALIZED [OK]",
@@ -373,19 +500,6 @@
         }
         window.addEventListener("DOMContentLoaded", () => { setTimeout(printLog, 500); });
 
-        // 滑鼠視差滾動
-        document.addEventListener('mousemove', (e) => {
-            if (matchMedia('(pointer: coarse)').matches) return; 
-            
-            const mouseX = (e.clientX - window.innerWidth / 2) / 100;
-            const mouseY = (e.clientY - window.innerHeight / 2) / 100;
-            document.getElementById('bgLayer').style.transform = `translate(${mouseX * -2}px, ${mouseY * -2}px)`;
-            if(uiLayer.classList.contains("ready")) {
-                uiLayer.style.transform = `translate(${mouseX * 2}px, ${mouseY * 2}px)`;
-            }
-        });
-
-        // 登入流轉核心邏輯
         const CORRECT_USERNAME = "doctor"; 
         const CORRECT_PASSWORD = "ark"; 
         let popupTimer = null; 
@@ -398,9 +512,15 @@
             if (userField === CORRECT_USERNAME && passField === CORRECT_PASSWORD) {
                 popup.classList.remove("show");
                 if(popupTimer) clearTimeout(popupTimer);
-                document.getElementById("loginScreen").style.display = "none";
                 
-                // 階段 1：顯示進度條
+                // 成功登入：淡出背景，並在 1 秒後完全停止 Canvas 動態渲染釋放效能
+                document.getElementById("loginScreen").style.display = "none";
+                bgContainer.style.opacity = "0"; 
+                setTimeout(() => {
+                    isStopped = true;
+                    cancelAnimationFrame(animationFrameId); 
+                }, 1000);
+                
                 const decryptStage = document.getElementById("decryptingStage");
                 const barFill = document.getElementById("progressBarFill");
                 const percentText = document.getElementById("progressPercent");
@@ -416,7 +536,6 @@
                     if(count >= 100) {
                         clearInterval(countInterval);
                         
-                        // 階段 2：切換至 Login Successful 動畫
                         setTimeout(() => {
                             decryptStage.style.display = "none";
                             
@@ -425,7 +544,6 @@
                             void successAnim.offsetWidth;
                             successAnim.classList.add("pop-in");
                             
-                            // 階段 3：Login Successful 後，淡入內文
                             setTimeout(() => {
                                 successAnim.style.display = "none";
                                 
@@ -448,7 +566,6 @@
             }
         }
 
-        // 鍵盤監聽
         document.getElementById("usernameInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") { event.preventDefault(); document.getElementById("passwordInput").focus(); }
         });
