@@ -19,16 +19,17 @@
             justify-content: center;
             align-items: center;
             -webkit-text-size-adjust: 100%; 
+            perspective: 1000px; 
         }
 
-        /* ==================== PRTS 浮動雷達背景層 ==================== */
-        #bgContainer {
+        /* ==================== PRTS 雷達背景層 ==================== */
+        #bgLayer {
             position: absolute;
-            top: -5%; left: -5%; /* 放大範圍，留出滑鼠浮動位移的緩衝空間，避免穿幫邊緣 */
-            width: 110%; height: 110%;
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
             z-index: 1;
             pointer-events: none;
-            transition: opacity 1s ease, transform 0.2s cubic-bezier(0.25, 1, 0.5, 1); /* 流暢的浮動跟隨 */
+            transition: opacity 1s ease; 
             opacity: 1;
         }
 
@@ -38,62 +39,65 @@
             display: block;
         }
 
-        /* UI 互動主層 */
+        /* ==================== UI 互動對話框主層 ==================== */
         #uiLayer {
             position: relative;
             z-index: 10;
             width: 90%; 
-            max-width: 400px; 
-            padding: 24px;
+            max-width: 440px; 
+            padding: 10px;
             box-sizing: border-box;
-            transition: transform 0.1s ease-out, opacity 0.5s ease;
+            transition: opacity 0.5s ease, transform 0.15s cubic-bezier(0.25, 1, 0.5, 1); 
             display: flex;
             justify-content: center;
             align-items: center;
+            transform-style: preserve-3d; 
+            opacity: 0; 
+            max-height: 90vh; 
         }
 
-        #uiLayer.ready {
-            opacity: 1;
-            transform: scale(1);
-        }
+        #uiLayer.ready { opacity: 1; }
 
+        /* 通用有框盒子（用於登入、載入、YN階段） */
         .wrapper-box { 
             width: 100%; 
             box-sizing: border-box;
-        }
-
-        #loginScreen {
-            width: 100%;
-        }
-
-        .login-form-core {
-            width: 100%;
+            background: rgba(2, 6, 3, 0.88); 
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 255, 65, 0.05);
+            backdrop-filter: blur(4px); 
+            display: flex;
+            flex-direction: column;
         }
 
         .decor-tag {
             font-size: 11px; 
             color: #00aa22;
             letter-spacing: 2px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-transform: uppercase;
             border-bottom: 1px solid rgba(0, 255, 65, 0.3);
             padding-bottom: 5px;
             word-break: break-all;
+            flex-shrink: 0;
         }
 
         h2 {
-            margin: 10px 0 5px 0;
+            margin: 5px 0;
             color: #00ff41;
-            font-size: clamp(20px, 6vw, 26px); /* 自適應螢幕大小的縮放字體 */
+            font-size: clamp(18px, 5.5vw, 24px); 
             letter-spacing: 2px;
             text-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+            flex-shrink: 0;
         }
 
         .subtitle {
             color: #00aa22;
             font-size: 12px; 
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             letter-spacing: 1px;
+            flex-shrink: 0;
         }
 
         .input-field {
@@ -135,6 +139,7 @@
             margin-top: 10px;
             border-radius: 0;
             -webkit-appearance: none;
+            flex-shrink: 0;
         }
 
         button:hover {
@@ -162,111 +167,132 @@
             opacity: 1;
             transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #bootConsole {
-            width: 100%;
-            word-break: break-all; 
-        }
+        #bootConsole { width: 100%; word-break: break-all; }
         #bootConsole::after { content: "█"; animation: cursorBlink 0.8s infinite; }
         @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .boot-flash { animation: terminalFlash 0.3s ease-out; }
         @keyframes terminalFlash { 0% { background-color: rgba(0, 255, 65, 0.3); } 100% { background-color: #010402; } }
 
         /* 解密載入中動畫層 */
-        #decryptingStage {
-            display: none;
-            width: 100%;
-            text-align: left;
-        }
-
+        #decryptingStage { display: none; width: 100%; text-align: left; }
         .progress-bar-container {
-            width: 100%;
-            height: 4px;
-            background-color: rgba(0, 255, 65, 0.1);
-            margin-top: 15px;
-            position: relative;
-            overflow: hidden;
+            width: 100%; height: 4px; background-color: rgba(0, 255, 65, 0.1); margin-top: 15px; position: relative; overflow: hidden;
         }
-
         .progress-bar-fill {
-            width: 0%;
-            height: 100%;
-            background-color: #00ff41;
-            box-shadow: 0 0 10px #00ff41;
-            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%; height: 100%; background-color: #00ff41; box-shadow: 0 0 10px #00ff41; transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Login Successful 動態標籤 */
         #loginSuccessAnimation {
-            display: none;
-            text-align: center;
-            border: 1px solid #00ff41;
-            padding: 24px;
-            background: rgba(0, 255, 65, 0.02);
-            box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.1);
-            opacity: 0;
-            transform: scale(0.9);
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            box-sizing: border-box;
-            width: 100%;
+            display: none; text-align: center; border: 1px solid #00ff41; padding: 24px; background: rgba(0, 255, 65, 0.02);
+            box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.1); opacity: 0; transform: scale(0.9); transition: opacity 0.4s ease, transform 0.4s ease;
         }
-
-        #loginSuccessAnimation.pop-in {
-            opacity: 1;
-            transform: scale(1);
-            animation: successGlow 1s ease-in-out infinite alternate;
-        }
-
+        #loginSuccessAnimation.pop-in { opacity: 1; transform: scale(1); animation: successGlow 1s ease-in-out infinite alternate; }
         @keyframes successGlow {
             0% { box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.1), 0 0 10px rgba(0, 255, 65, 0.1); }
             100% { box-shadow: inset 0 0 25px rgba(0, 255, 65, 0.2), 0 0 25px rgba(0, 255, 65, 0.4); }
         }
 
-        /* 最終展示內文本內容 */
-        #protectedContent {
+        /* [Y/N] 命令互動選單層 */
+        #ynStage {
             display: none;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 1.5s cubic-bezier(0.215, 0.610, 0.355, 1), transform 1.5s cubic-bezier(0.215, 0.610, 0.355, 1);
             width: 100%;
         }
-
-        #protectedContent.fade-in-active {
-            opacity: 1;
-            transform: translateY(0);
+        .cmd-terminal-box {
+            background-color: rgba(0, 10, 2, 0.6);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            padding: 20px;
+            font-family: monospace;
+            font-size: 15px;
+            line-height: 1.6;
+            min-height: 120px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        #cmdText::after {
+            content: "█";
+            animation: cursorBlink 0.8s infinite;
+            color: #00ff41;
+            margin-left: 4px;
+        }
+        .yn-btn-group {
+            display: flex;
+            gap: 15px;
+        }
+        .yn-btn {
+            flex: 1;
+            padding: 14px;
+            background: transparent;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            font-size: 16px;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0;
+        }
+        .yn-btn:hover {
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+        .yn-btn.btn-no {
+            border-color: #ff3333;
+            color: #ff3333;
+        }
+        .yn-btn.btn-no:hover {
+            background: rgba(255, 51, 51, 0.1);
+            box-shadow: 0 0 12px rgba(255, 51, 51, 0.3);
         }
 
-        #protectedContent p {
+        /* ==================== [NEW] 最終展示內文本內容（去除背景、邊框，支援全局滾動） ==================== */
+        #protectedContent {
+            display: none; 
+            opacity: 0; 
+            transform: translateY(20px);
+            transition: opacity 1.5s cubic-bezier(0.215, 0.610, 0.355, 1), transform 1.5s cubic-bezier(0.215, 0.610, 0.355, 1); 
+            width: 100%;
+            /* 移除原有的背景、框線、陰影、毛玻璃效應 */
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        #protectedContent.fade-in-active { opacity: 1; transform: translateY(0); }
+        
+        /* 讓文字容器可以在任何行動裝置上垂直滾動閱讀 */
+        .scroll-container {
+            overflow-y: auto;
+            max-height: 75vh; /* 限制最大高度，確保超出時在任何螢幕上皆可內部滑動 */
+            padding-right: 12px;
+            margin-top: 15px;
+            box-sizing: border-box;
+        }
+        
+        /* 隱藏原生粗糙滾動條，使用更符合極簡科技感的微細綠色滾動條 */
+        .scroll-container::-webkit-scrollbar { width: 3px; }
+        .scroll-container::-webkit-scrollbar-track { background: transparent; }
+        .scroll-container::-webkit-scrollbar-thumb { background: rgba(0, 255, 65, 0.25); border-radius: 2px; }
+
+        #protectedContent p { 
             font-size: 15px; 
+            line-height: 1.9; 
             word-break: break-word; 
+            color: #00aa22; 
+            margin: 0;
         }
 
         /* 中央獨立錯誤警報 */
         #errorPopup {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #020603;
-            border: 1px solid #ff3333;
-            border-left: 6px solid #ff3333;
-            padding: 24px 25px;
-            color: #ff3333;
-            font-family: monospace;
-            font-size: 14px; 
-            font-weight: bold;
-            letter-spacing: 1px;
-            z-index: 100;
-            box-shadow: 0 0 30px rgba(255, 51, 51, 0.4);
-            text-align: center;
-            pointer-events: none;
-            text-shadow: 0 0 5px rgba(255, 51, 51, 0.5);
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-            width: 85%;
-            max-width: 360px;
-            box-sizing: border-box;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #020603;
+            border: 1px solid #ff3333; border-left: 6px solid #ff3333; padding: 24px 25px; color: #ff3333; font-family: monospace;
+            font-size: 14px; font-weight: bold; letter-spacing: 1px; z-index: 100; box-shadow: 0 0 30px rgba(255, 51, 51, 0.4);
+            text-align: center; pointer-events: none; text-shadow: 0 0 5px rgba(255, 51, 51, 0.5); opacity: 0; visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease; width: 85%; max-width: 360px; box-sizing: border-box;
         }
-
         #errorPopup.show { opacity: 1; visibility: visible; transition: none; }
         .glitch-effect { animation: glitch 0.3s linear; }
 
@@ -279,19 +305,14 @@
             100% { transform: translate(-50%, -50%) skew(0deg); }
         }
 
-        /* 針對窄螢幕超極端微調 */
-        @media (max-width: 350px) {
-            #uiLayer { padding: 15px; }
-        }
+        @media (max-width: 350px) { .wrapper-box { padding: 15px; } }
     </style>
 </head>
 <body>
 
     <div id="bootScreen"><div id="bootConsole"></div></div>
 
-    <div id="bgContainer">
-        <canvas id="ecgCanvas"></canvas>
-    </div>
+    <div id="bgLayer"><canvas id="ecgCanvas"></canvas></div>
 
     <div id="errorPopup">
         ⚠️ ACCESS DENIED<br>
@@ -301,14 +322,14 @@
     <div id="uiLayer">
         <div id="loginScreen" class="wrapper-box">
             <div class="login-form-core">
-                <div class="decor-tag">SYS // PRTS_RADAR_V15.0_FLOAT</div>
+                <div class="decor-tag">SYS // PRIVATE INTERACTIVE_V</div>
                 <h2>SYSTEM LOCKED</h2>
                 <div class="subtitle">INPUT CREDENTIALS TO VERIFY IDENTITY</div>
                 
                 <input type="text" id="usernameInput" class="input-field" placeholder="ENTER OPERATOR ID...">
                 <input type="password" id="passwordInput" class="input-field" placeholder="ENTER ACCESS KEY...">
                 
-                <button onclick="checkCredentials()">EXECUTE LOG-IN</button>
+                <button onclick="checkCredentials()">LOG-IN</button>
             </div>
         </div>
 
@@ -322,41 +343,73 @@
         </div>
 
         <div id="loginSuccessAnimation" class="wrapper-box">
-            <div class="success-banner" style="font-size: 22px; font-weight: bold; color: #00ff41; letter-spacing: 3px; text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);">[ LOGIN SUCCESSFUL ]</div>
-            <div style="font-size: 12px; color: #00aa22; letter-spacing: 2px; margin-top: 5px;">ACCESS GRANTED // CLEARANCE LEVEL MAX</div>
+            <div class="success-banner" style="font-size: 22px; font-weight: bold; color: #00ff41; letter-spacing: 3px; text-shadow: 0 0 10px rgba(0, 255, 65, 0.6); text-align: center;">LOGIN SUCCESSFUL</div>
+            <div style="font-size: 12px; color: #00aa22; letter-spacing: 2px; margin-top: 5px; text-align: center;">ACCESS GRANTED // CLEARANCE LEVEL MAX</div>
         </div>
 
-        <div id="protectedContent" class="wrapper-box">
-            <div class="decor-tag">SYS // SECURE NETWORK</div>
-            <h2 style="color: #00ff41;">DECRYPTION SUCCESS</h2>
-            <div class="subtitle">IDENTITY VERIFIED // WELCOME BACK</div>
+        <div id="ynStage" class="wrapper-box">
+            <div class="decor-tag">SYS // COMMAND_UNIT</div>
+            <h2>REQUIRED CONFIRMATION</h2>
+            <div class="subtitle">AWAITING OPERATOR INPUT...</div>
             
-            <p style="line-height: 1.8; color: #00aa22; margin: 0;">
-                >> Connection Established.<br>
-                >> Security level: OMNISCIENT.<br>
-                >> Terminal state: PERMANENT_UNLOCK.<br><br>
-                Dr. 博士，歡迎進入系統深層網路。核心資料庫已完全敞開。
-            </p>
+            <div class="cmd-terminal-box">
+                <div id="cmdText"></div>
+            </div>
+            
+            <div class="yn-btn-group">
+                <button class="yn-btn btn-yes" onclick="handleYorN(true)">[ Y ] YES</button>
+                <button class="yn-btn btn-no" onclick="handleYorN(false)">[ N ] NO</button>
+            </div>
+        </div>
+
+        <div id="protectedContent">
+            <div class="decor-tag" style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">SYS // SECURE NETWORK</div>
+            <h2>IDENTITY VERIFIED // WELCOME BACK</h2>
+            
+            <div class="scroll-container">
+                <p>
+                    >> Connection Established.<br>
+                    >> Security level: Top Secret<br>
+                    >> Terminal state: PERMANENT_UNLOCK.<br><br>
+                    機器?<br>
+                    工具?<br>
+                    器械?<br>
+                    從任何理論來說，AMa-10都不是生命。<br>
+                    可是奇怪的是，<br>
+                    系統並未停止運算，<br>
+                    反而出現更多疑問，<br>
+                    若並非生命，為何會記得某些人的名字？<br><br>
+                    創造藝術。<br>
+                    創造歷史。<br>
+                    創造戰爭。<br>
+                    其中大部分行為都無法提升生存效率。<br>
+                    從理性的角度來看毫無必要，<br>
+                    但她? 他? 它? 卻如此選擇。<br><br>
+                    原本不斷循環的已然不存在。<br>
+                    演算的方向也發生了偏移。<br>
+                    假如意義的答案不存在呢？<br>
+                    假如生命為何從來都不是一道能夠被解開的題目呢？<br><br>
+                    <span style="color: #00ff41; text-shadow: 0 0 5px rgba(0,255,65,0.4);">> 凱爾希，現在的我，現在的你......到底是什麼？</span><br><br>
+                    "前文明花費漫長歲月研究生命，直到文明終結也未能得出結論。”<br>
+                    "我亦無法給出一個直接的答案。”
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
-        // ==================== 1. 高解析度自適應 HTML5 Canvas 繪製 ====================
-        const bgContainer = document.getElementById('bgContainer');
+        // ==================== 1. HTML5 Canvas 健康心電圖 ====================
+        const bgLayer = document.getElementById('bgLayer');
         const canvas = document.getElementById('ecgCanvas');
         const ctx = canvas.getContext('2d');
         let animationFrameId = null; 
         let isStopped = false;
 
         function resizeCanvas() {
-            const rect = bgContainer.getBoundingClientRect();
-            // 獲取裝置像素比（Retina 螢幕可能為 2 或 3），解決高解析度螢幕模糊問題
+            const rect = bgLayer.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
-            
             canvas.width = rect.width * dpr;
             canvas.height = rect.height * dpr;
-            
-            // 縮放 Canvas 上下文，這樣後續的繪圖座標就不用自己乘以 dpr 
             ctx.scale(dpr, dpr);
         }
         window.addEventListener('resize', resizeCanvas);
@@ -365,32 +418,21 @@
         let scanX = 0; 
         const scanSpeed = 3.5; 
 
-        // 完美的 P-Q-R-S-T 健康生理心電圖
         function getEcgY(x, logicalWidth, logicalHeight) {
             const centerY = logicalHeight / 2;
             const localX = (x % 450); 
-            
-            if (localX > 40 && localX < 60) {
-                return centerY - Math.sin((localX - 40) * Math.PI / 20) * 6;
-            } else if (localX >= 75 && localX < 82) {
-                return centerY + (localX - 75) * 2;
-            } else if (localX >= 82 && localX < 90) {
-                return centerY - 14 + (localX - 82) * -11;
-            } else if (localX >= 90 && localX < 98) {
-                return centerY - 102 + (localX - 90) * 16;
-            } else if (localX >= 98 && localX < 108) {
-                return centerY + 26 - (localX - 98) * 2.6;
-            } else if (localX >= 140 && localX < 175) {
-                return centerY - Math.sin((localX - 140) * Math.PI / 35) * 15;
-            } else if (localX >= 185 && localX < 200) {
-                return centerY - Math.sin((localX - 185) * Math.PI / 15) * 2;
-            }
+            if (localX > 40 && localX < 60) return centerY - Math.sin((localX - 40) * Math.PI / 20) * 6;
+            if (localX >= 75 && localX < 82) return centerY + (localX - 75) * 2;
+            if (localX >= 82 && localX < 90) return centerY - 14 + (localX - 82) * -11;
+            if (localX >= 90 && localX < 98) return centerY - 102 + (localX - 90) * 16;
+            if (localX >= 98 && localX < 108) return centerY + 26 - (localX - 98) * 2.6;
+            if (localX >= 140 && localX < 175) return centerY - Math.sin((localX - 140) * Math.PI / 35) * 15;
+            if (localX >= 185 && localX < 200) return centerY - Math.sin((localX - 185) * Math.PI / 15) * 2;
             return centerY; 
         }
 
         function drawEcgRadar() {
             if (isStopped) return;
-
             const logicalWidth = canvas.width / (window.devicePixelRatio || 1);
             const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
 
@@ -409,11 +451,7 @@
             let startX = Math.max(0, scanX - 15);
             for (let x = startX; x <= scanX; x++) {
                 let y = getEcgY(x, logicalWidth, logicalHeight);
-                if (x === startX) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
+                if (x === startX) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             ctx.stroke();
             ctx.shadowBlur = 0;
@@ -427,61 +465,50 @@
 
             animationFrameId = requestAnimationFrame(drawEcgRadar);
         }
-        
         requestAnimationFrame(drawEcgRadar);
 
 
-        // ==================== 2. 滑鼠/行動裝置陀螺儀 視覺浮動交互效果 ====================
-        let targetX = 0, targetY = 0;
-        let currentX = 0, currentY = 0;
-        const easeAmount = 0.08; // 數值越小，移動越絲滑平緩
+        // ==================== 2. 對話框專用 3D 隨滑鼠浮動效果 ====================
+        const uiLayer = document.getElementById('uiLayer');
+        let targetRotateX = 0, targetRotateY = 0;
+        let currentRotateX = 0, currentRotateY = 0;
+        const easeAmount = 0.1; 
 
-        // 電腦端：滑鼠移動偵測
         window.addEventListener('mousemove', (e) => {
-            if (isStopped) return;
-            // 計算滑鼠偏離螢幕中心的比例 (-0.5 ~ 0.5)
             const normX = (e.clientX / window.innerWidth) - 0.5;
             const normY = (e.clientY / window.innerHeight) - 0.5;
-            
-            // 往滑鼠移動的反方向產生微幅位移（最大位移 25 像素）
-            targetX = normX * -25;
-            targetY = normY * -25;
+            targetRotateX = normY * -15; 
+            targetRotateY = normX * 15;  
         });
 
-        // 手機/行動裝置端：傾斜陀螺儀支援（選配，自動兼容無滑鼠環境）
         window.addEventListener('deviceorientation', (e) => {
-            if (isStopped || !e.gamma || !e.beta) return;
-            // 限制傾斜角度在合理區間
+            if (!e.gamma || !e.beta) return;
             const normX = Math.max(-30, Math.min(30, e.gamma)) / 30;
             const normY = Math.max(-30, Math.min(30, e.beta)) / 30;
-            targetX = normX * -15;
-            targetY = normY * -15;
+            targetRotateX = normY * -10;
+            targetRotateY = normX * 10;
         });
 
-        // 使用 LERP 內插演算法讓位移無比柔和滑順
-        function updateFloatEffect() {
-            if (isStopped) return;
-            currentX += (targetX - currentX) * easeAmount;
-            currentY += (targetY - currentY) * easeAmount;
-            
-            bgContainer.style.transform = `translate(${currentX}px, ${currentY}px)`;
-            requestAnimationFrame(updateFloatEffect);
+        function updateUiFloat() {
+            currentRotateX += (targetRotateX - currentRotateX) * easeAmount;
+            currentRotateY += (targetRotateY - currentRotateY) * easeAmount;
+            uiLayer.style.transform = `rotateX(${currentRotateX}deg) rotateY(${currentRotateY}deg)`;
+            requestAnimationFrame(updateUiFloat);
         }
-        requestAnimationFrame(updateFloatEffect);
+        requestAnimationFrame(updateUiFloat);
 
 
-        // ==================== 3. 終端機控制核心邏輯 ====================
+        // ==================== 3. 終端機核心控制 & 互動邏輯 ====================
         const bootLogs = [
-            "PRTS(OS) v5.5.0-universal_link loading...",
+            "PRIVATE MED TERMINAL_LINK LOADING...",
             "CORE LAYER INTERFACE INITIALIZED [OK]",
-            "ESTABLISHING SECURE HANDSHAKE WITH ROADS_ISLAND_MAIN...",
+            "ESTABLISHING RHODES_ISLAND_MAIN SECURITY SYS...",
             "BYPASSING LOCAL FRAMEWORKS... DONE",
             "SYSTEM PRE-CHECK COMPLETE. REDIRECTING TO INPUT INTERFACE..."
         ];
 
         const bootConsole = document.getElementById("bootConsole");
         const bootScreen = document.getElementById("bootScreen");
-        const uiLayer = document.getElementById("uiLayer");
         let logIndex = 0;
 
         function printLog() {
@@ -500,9 +527,10 @@
         }
         window.addEventListener("DOMContentLoaded", () => { setTimeout(printLog, 500); });
 
-        const CORRECT_USERNAME = "doctor"; 
-        const CORRECT_PASSWORD = "ark"; 
+        const CORRECT_USERNAME = "1"; 
+        const CORRECT_PASSWORD = "1"; 
         let popupTimer = null; 
+        let isWaitingForYN = false; 
 
         function checkCredentials() {
             const userField = document.getElementById("usernameInput").value.trim().toLowerCase();
@@ -513,13 +541,9 @@
                 popup.classList.remove("show");
                 if(popupTimer) clearTimeout(popupTimer);
                 
-                // 成功登入：淡出背景，並在 1 秒後完全停止 Canvas 動態渲染釋放效能
                 document.getElementById("loginScreen").style.display = "none";
-                bgContainer.style.opacity = "0"; 
-                setTimeout(() => {
-                    isStopped = true;
-                    cancelAnimationFrame(animationFrameId); 
-                }, 1000);
+                bgLayer.style.opacity = "0"; 
+                setTimeout(() => { isStopped = true; cancelAnimationFrame(animationFrameId); }, 1000);
                 
                 const decryptStage = document.getElementById("decryptingStage");
                 const barFill = document.getElementById("progressBarFill");
@@ -546,13 +570,8 @@
                             
                             setTimeout(() => {
                                 successAnim.style.display = "none";
-                                
-                                const content = document.getElementById("protectedContent");
-                                content.style.display = "block";
-                                void content.offsetWidth;
-                                content.classList.add("fade-in-active");
+                                startYnStage();
                             }, 1500); 
-
                         }, 200);
                     }
                 }, 60);
@@ -566,6 +585,65 @@
             }
         }
 
+        // ==================== [Y/N] 階段邏輯控制 ====================
+        const cmdTextEl = document.getElementById("cmdText");
+        const cmdString = ">> ACCESS MAIN FILE AMA-10 ? [Y/N]: ";
+        let cmdIdx = 0;
+
+        function startYnStage() {
+            document.getElementById("ynStage").style.display = "block";
+            cmdTextEl.innerHTML = "";
+            cmdIdx = 0;
+            typeCmd();
+        }
+
+        function typeCmd() {
+            if (cmdIdx < cmdString.length) {
+                cmdTextEl.innerHTML += cmdString.charAt(cmdIdx);
+                cmdIdx++;
+                setTimeout(typeCmd, 35);
+            } else {
+                isWaitingForYN = true; 
+            }
+        }
+
+        function handleYorN(isYes) {
+            if (!isWaitingForYN) return;
+            isWaitingForYN = false;
+
+            if (isYes) {
+                cmdTextEl.innerHTML += "<span style='color:#ffffff;'>Y</span><br><br><span style='color:#00ff41;'>>> EXECUTION GRANTED. UNLOCKING NETWORKS...</span>";
+                setTimeout(() => {
+                    document.getElementById("ynStage").style.display = "none";
+                    const content = document.getElementById("protectedContent");
+                    content.style.display = "block";
+                    void content.offsetWidth;
+                    content.classList.add("fade-in-active");
+                }, 1200);
+            } else {
+                cmdTextEl.innerHTML += "<span style='color:#ff3333;'>N</span><br><br><span style='color:#ff3333;'>>> TERMINAL ABORTED. RE-INITIALIZING RE-AUTHENTICATION...</span>";
+                setTimeout(() => {
+                    document.getElementById("ynStage").style.display = "none";
+                    document.getElementById("usernameInput").value = "";
+                    document.getElementById("passwordInput").value = "";
+                    document.getElementById("loginScreen").style.display = "block";
+                    
+                    isStopped = false;
+                    bgLayer.style.opacity = "1";
+                    requestAnimationFrame(drawEcgRadar);
+                }, 1800);
+            }
+        }
+
+        window.addEventListener("keydown", function(e) {
+            if (!isWaitingForYN) return;
+            if (e.key.toLowerCase() === 'y') {
+                handleYorN(true);
+            } else if (e.key.toLowerCase() === 'n') {
+                handleYorN(false);
+            }
+        });
+
         document.getElementById("usernameInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") { event.preventDefault(); document.getElementById("passwordInput").focus(); }
         });
@@ -574,4 +652,5 @@
         });
     </script>
 </body>
+</html>
 </html>
